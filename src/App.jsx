@@ -1,41 +1,48 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
+// eslint-disable-next-line no-undef
+const BASE_URL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:5000"
+    : "https://todobackendpy.onrender.com";
+
 
 function App() {
   const [todos, setTodos] = useState([]);
+  console.log("data", todos);
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [editId, setEditId] = useState(null);
   const [editName, setEditName] = useState("");
   const [editAge, setEditAge] = useState("");
 
+  // Fetch todos from the backend
   useEffect(() => {
-    const storedTodos = JSON.parse(localStorage.getItem("todos")) || [];
-    setTodos(storedTodos);
+    axios
+      .get(`${BASE_URL}/todos`)
+      .then((response) => {
+        setTodos(response.data);
+      })
+      .catch((error) => {
+        console.error("There was an error fetching the todos:", error);
+      });
   }, []);
 
-  const saveToLocalStorage = (updated) => {
-    localStorage.setItem("todos", JSON.stringify(updated));
-    setTodos(updated);
-  };
-
+  // Add new todo
   const addTodo = () => {
     if (name.trim() === "" || age.trim() === "") return;
+
     const newTodo = {
       id: Date.now(),
       name,
       age,
-      completed: false,
     };
-    const updatedTodos = [...todos, newTodo];
-    saveToLocalStorage(updatedTodos);
-    setName("");
-    setAge("");
-  };
 
-  const deleteTodo = (id) => {
-    alert("Are you sure you want to delete this entry?");
-    const updatedTodos = todos.filter((todo) => todo.id !== id);
-    saveToLocalStorage(updatedTodos);
+    axios.post(`${BASE_URL}/todos`, newTodo).then((response) => {
+      setTodos([...todos, response.data]); // This now works as expected
+      setName("");
+      setAge("");
+    });
   };
 
   const startEdit = (id, name, age) => {
@@ -44,15 +51,45 @@ function App() {
     setEditAge(age);
   };
 
+  // Update todo
   const updateTodo = () => {
     if (editName.trim() === "" || editAge.trim() === "") return;
-    const updatedTodos = todos.map((todo) =>
-      todo.id === editId ? { ...todo, name: editName, age: editAge } : todo
-    );
-    saveToLocalStorage(updatedTodos);
-    setEditId(null);
-    setEditName("");
-    setEditAge("");
+
+    const updatedTodo = {
+      id: editId,
+      name: editName,
+      age: editAge,
+    };
+
+    axios
+      .put(`${BASE_URL}/todos/${editId}`, updatedTodo)
+      .then((response) => {
+        const updatedTodos = todos.map((todo) =>
+          todo._id === editId ? response.data : todo
+        );
+        setTodos(updatedTodos);
+        setEditId(null);
+        setEditName("");
+        setEditAge("");
+      })
+      .catch((error) => {
+        console.error("There was an error updating the todo:", error);
+      });
+  };
+
+  // Delete todo
+  const deleteTodo = (id) => {
+    if (window.confirm("Are you sure you want to delete this entry?")) {
+      axios
+        .delete(`${BASE_URL}/todos/${id}`)
+        .then(() => {
+          const updatedTodos = todos.filter((todo) => todo._id !== id);
+          setTodos(updatedTodos);
+        })
+        .catch((error) => {
+          console.error("There was an error deleting the todo:", error);
+        });
+    }
   };
 
   return (
@@ -93,10 +130,10 @@ function App() {
           ) : (
             todos.map((todo) => (
               <li
-                key={todo.id}
+                key={todo._id}
                 className="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-lg px-4 py-2 hover:shadow transition-all"
               >
-                {editId === todo.id ? (
+                {editId === todo._id ? (
                   <>
                     <input
                       value={editName}
@@ -110,7 +147,7 @@ function App() {
                     />
                     <button
                       onClick={updateTodo}
-                      className="text-green-600 font-semibold cursor-pointer  mr-2 hover:font-bold"
+                      className="text-green-600 font-semibold cursor-pointer mr-2 hover:font-bold"
                     >
                       Update
                     </button>
@@ -124,18 +161,18 @@ function App() {
                 ) : (
                   <>
                     <span className="text-gray-800 flex-1">
-                      <strong>{todo.name}</strong> —  {todo.age} years old
+                      <strong>{todo?.name}</strong> — {todo?.age} years old
                     </span>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => startEdit(todo.id, todo.name, todo.age)}
-                        className="text-blue-500 hover:text-blue-700"
+                        onClick={() => startEdit(todo._id, todo.name, todo.age)}
+                        className="text-blue-500 cursor-pointer hover:text-blue-700"
                       >
                         ✏️
                       </button>
                       <button
-                        onClick={() => deleteTodo(todo.id)}
-                        className="text-red-500 hover:text-red-700"
+                        onClick={() => deleteTodo(todo._id)}
+                        className="text-red-500 cursor-pointer hover:text-red-700"
                       >
                         ❌
                       </button>
