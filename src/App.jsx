@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-// eslint-disable-next-line no-undef
+
 const BASE_URL =
   window.location.hostname === "localhost"
     ? "http://localhost:5000"
