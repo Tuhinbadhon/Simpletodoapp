@@ -1,20 +1,22 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-
+import { BeatLoader } from "react-spinners";
+import { toast } from "react-toastify";
 const BASE_URL =
   window.location.hostname === "localhost"
     ? "http://localhost:5000"
     : "https://todobackendpy.onrender.com";
 
-
 function App() {
   const [todos, setTodos] = useState([]);
-  console.log("data", todos);
+  // console.log("data", todos);
+  const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [editId, setEditId] = useState(null);
   const [editName, setEditName] = useState("");
   const [editAge, setEditAge] = useState("");
+  // const notify = () => toast("Wow so easy!");
 
   // Fetch todos from the backend
   useEffect(() => {
@@ -26,6 +28,7 @@ function App() {
       .catch((error) => {
         console.error("There was an error fetching the todos:", error);
       });
+    setLoading(false);
   }, []);
 
   // Add new todo
@@ -39,9 +42,18 @@ function App() {
     };
 
     axios.post(`${BASE_URL}/todos`, newTodo).then((response) => {
-      setTodos([...todos, response.data]); // This now works as expected
+      setTodos([response.data, ...todos]);
       setName("");
       setAge("");
+    });
+    toast.success(" Added successfully!", {
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
     });
   };
 
@@ -75,6 +87,15 @@ function App() {
       .catch((error) => {
         console.error("There was an error updating the todo:", error);
       });
+    toast.success(" Updated successfully!", {
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
   };
 
   // Delete todo
@@ -89,6 +110,15 @@ function App() {
         .catch((error) => {
           console.error("There was an error deleting the todo:", error);
         });
+      toast.error(" Deleted successfully!", {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     }
   };
 
@@ -109,6 +139,7 @@ function App() {
           />
           <input
             value={age}
+            type="number"
             onChange={(e) => setAge(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addTodo()}
             placeholder="Enter age"
@@ -123,7 +154,11 @@ function App() {
         </div>
 
         <ul className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-300">
-          {todos.length === 0 ? (
+          {loading ? (
+            <div className="flex justify-center">
+              <BeatLoader color="#3B82F6" size={15} />
+            </div>
+          ) : todos.length === 0 ? (
             <p className="text-gray-400 text-center">
               No entries yet. Add one!
             </p>
@@ -141,6 +176,7 @@ function App() {
                       className="w-1/3 px-2 py-1 mr-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-300"
                     />
                     <input
+                      type="number"
                       value={editAge}
                       onChange={(e) => setEditAge(e.target.value)}
                       className="w-1/4 px-2 py-1 mr-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-300"
