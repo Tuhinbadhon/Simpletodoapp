@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { BeatLoader } from "react-spinners";
 import { toast } from "react-toastify";
@@ -16,7 +16,15 @@ const Home = () => {
   const [editName, setEditName] = useState("");
   const [editAge, setEditAge] = useState("");
 
-  const { data: todos = [], isLoading, refetch } = useGetTodosQuery();
+  const { data: todos = [], isLoading, refetch, error } = useGetTodosQuery();
+  useEffect(() => {
+    if (error) {
+      console.error("Error fetching todos:", error);
+    }
+    if (isLoading) {
+      console.log("Loading todos...");
+    }
+  }, [error, isLoading]);
   //   console.log(data)
   const [addTodo] = useAddTodoMutation();
   const [updateTodo] = useUpdateTodoMutation();
@@ -91,8 +99,12 @@ const Home = () => {
 
         <ul className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-300">
           {isLoading ? (
-            <div className="flex justify-center">
+            <div className="flex flex-col items-center justify-center gap-2 text-center">
               <BeatLoader color="#3B82F6" size={15} />
+              <h2 className="text-sm text-gray-600">
+                Hi! The app is hosted on a free server, so it may take up to 50
+                seconds to fetch the data.
+              </h2>
             </div>
           ) : todos.length === 0 ? (
             <p className="text-gray-400 text-center">
