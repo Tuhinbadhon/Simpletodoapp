@@ -9,3 +9,4 @@ export const store = configureStore({
       serializableCheck: false, // Disable warnings for non-serializable actions
     }).concat(todoApi.middleware),
 });
+// store setting
